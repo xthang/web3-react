@@ -9,7 +9,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "8.1.3-beta.1",
+  "version": "8.1.3-beta-2",
   "files": [
     "dist/*"
   ],
@@ -23,8 +23,8 @@
     "start": "tsc --watch"
   },
   "dependencies": {
-    "@web3-react-x/store": "^8.1.2-beta.0",
-    "@web3-react-x/types": "^8.1.2-beta.0",
+    "@web3-react-x/store": "^8.1.2-beta.2",
+    "@web3-react-x/types": "^8.1.2-beta.2",
     "tronweb": "^5.1.0",
     "zustand": "^4.3.5"
   },
