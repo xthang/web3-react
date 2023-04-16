@@ -1,6 +1,9 @@
 import { getAddress } from '@ethersproject/address'
-import type { Actions, Web3ReactState, Web3ReactStateUpdate, Web3ReactStore } from '@web3-react/types'
+import TronWebType from '@types-x/tronweb'
+import type { Actions, Web3ReactState, Web3ReactStateUpdate, Web3ReactStore } from '@web3-react-x/types'
 import { createStore } from 'zustand'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const TronWeb = require('tronweb') as typeof TronWebType
 
 /**
  * MAX_SAFE_CHAIN_ID is the upper bound limit on what will be accepted for `chainId`
@@ -10,14 +13,39 @@ import { createStore } from 'zustand'
  */
 export const MAX_SAFE_CHAIN_ID = 4503599627370476
 
-function validateChainId(chainId: number): void {
-  if (!Number.isInteger(chainId) || chainId <= 0 || chainId > MAX_SAFE_CHAIN_ID) {
+export enum NetworkStandard {
+  eip155 = 'eip155',
+  solana = 'solana',
+  polkadot = 'polkadot',
+  cosmos = 'cosmos',
+  cardano = 'cardano',
+  elrond = 'elrond',
+  multiversx = 'multiversx',
+  tron = 'tron',
+}
+
+function validateChainId(chainId: string): void {
+  if (typeof chainId !== 'string') {
     throw new Error(`Invalid chainId ${chainId}`)
+  }
+  const [namespace, id] = chainId.split(':')
+  if (!namespace || !id) throw new Error(`Invalid chainId ${chainId}`)
+  const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
+  if (!networkStandard) throw new Error(`Invalid network standard ${networkStandard}`)
+  if (networkStandard === NetworkStandard.eip155) {
+    const parsed = parseInt(id)
+    if (!Number.isInteger(parsed) || parsed <= 0 || parsed > MAX_SAFE_CHAIN_ID) {
+      throw new Error(`Invalid eip155 chainId ${chainId}`)
+    }
   }
 }
 
-function validateAccount(account: string): string {
-  return getAddress(account)
+function validateAccount(networkStandard: NetworkStandard, account: string): string {
+  if (networkStandard === NetworkStandard.eip155) return getAddress(account)
+  else if (networkStandard === NetworkStandard.tron) {
+    if (!TronWeb.isAddress(account)) return account
+  }
+  throw new Error(`Unsupported network standard ${networkStandard}`)
 }
 
 const DEFAULT_STATE = {
@@ -63,8 +91,11 @@ export function createWeb3ReactStoreAndActions(): [Web3ReactStore, Actions] {
 
     // validate accounts statically, independent of existing state
     if (stateUpdate.accounts !== undefined) {
+      const [namespace] = (stateUpdate.chainId ?? store.getState().chainId)!.split(':')
+      const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
+
       for (let i = 0; i < stateUpdate.accounts.length; i++) {
-        stateUpdate.accounts[i] = validateAccount(stateUpdate.accounts[i])
+        stateUpdate.accounts[i] = validateAccount(networkStandard, stateUpdate.accounts[i])
       }
     }
 

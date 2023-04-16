@@ -5,8 +5,8 @@ import type {
   ProviderConnectInfo,
   ProviderRpcError,
   WatchAssetParameters,
-} from '@web3-react/types'
-import { Connector } from '@web3-react/types'
+} from '@web3-react-x/types'
+import { Connector } from '@web3-react-x/types'
 
 function parseChainId(chainId: string | number) {
   return typeof chainId === 'number' ? chainId : Number.parseInt(chainId, chainId.startsWith('0x') ? 16 : 10)
@@ -55,7 +55,7 @@ export class CoinbaseWallet extends Connector {
       this.provider = this.coinbaseWallet.makeWeb3Provider(url)
 
       this.provider.on('connect', ({ chainId }: ProviderConnectInfo): void => {
-        this.actions.update({ chainId: parseChainId(chainId) })
+        this.actions.update({ chainId: `eip155:${chainId}` })
       })
 
       this.provider.on('disconnect', (error: ProviderRpcError): void => {
@@ -64,7 +64,7 @@ export class CoinbaseWallet extends Connector {
       })
 
       this.provider.on('chainChanged', (chainId: string): void => {
-        this.actions.update({ chainId: parseChainId(chainId) })
+        this.actions.update({ chainId: `eip155:${chainId}` })
       })
 
       this.provider.on('accountsChanged', (accounts: string[]): void => {
@@ -92,7 +92,7 @@ export class CoinbaseWallet extends Connector {
       const accounts = await this.provider.request<string[]>({ method: 'eth_accounts' })
       if (!accounts.length) throw new Error('No accounts returned')
       const chainId = await this.provider.request<string>({ method: 'eth_chainId' })
-      this.actions.update({ chainId: parseChainId(chainId), accounts })
+      this.actions.update({ chainId: `eip155:${chainId}`, accounts })
     } catch (error) {
       cancelActivation()
       throw error
@@ -150,7 +150,7 @@ export class CoinbaseWallet extends Connector {
       const receivedChainId = parseChainId(chainId)
 
       if (!desiredChainId || desiredChainId === receivedChainId)
-        return this.actions.update({ chainId: receivedChainId, accounts })
+        return this.actions.update({ chainId: `eip155:${receivedChainId}`, accounts })
 
       // if we're here, we can try to switch networks
       const desiredChainIdHex = `0x${desiredChainId.toString(16)}`

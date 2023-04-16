@@ -1,8 +1,8 @@
+import { useEffect, useMemo, useState } from 'react'
 import type { Networkish } from '@ethersproject/networks'
 import type { BaseProvider, Web3Provider } from '@ethersproject/providers'
-import { createWeb3ReactStoreAndActions } from '@web3-react/store'
-import type { Actions, Connector, Web3ReactState, Web3ReactStore } from '@web3-react/types'
-import { useEffect, useMemo, useState } from 'react'
+import { createWeb3ReactStoreAndActions } from '@web3-react-x/store'
+import type { Actions, Connector, Web3ReactState, Web3ReactStore } from '@web3-react-x/types'
 import { useStore } from 'zustand'
 
 let DynamicProvider: typeof Web3Provider | null | undefined

@@ -1,8 +1,8 @@
 import type { SafeAppProvider } from '@safe-global/safe-apps-provider'
 import type SafeAppsSDK from '@safe-global/safe-apps-sdk'
 import type { Opts } from '@safe-global/safe-apps-sdk'
-import type { Actions } from '@web3-react/types'
-import { Connector } from '@web3-react/types'
+import type { Actions } from '@web3-react-x/types'
+import { Connector } from '@web3-react-x/types'
 
 export class NoSafeContext extends Error {
   public constructor() {
@@ -87,7 +87,7 @@ export class GnosisSafe extends Connector {
       if (!this.provider) throw new NoSafeContext()
 
       this.actions.update({
-        chainId: this.provider.chainId,
+        chainId: `eip155:${this.provider.chainId}`,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         accounts: [await this.sdk!.safe.getInfo().then(({ safeAddress }) => safeAddress)],
       })
@@ -109,7 +109,7 @@ export class GnosisSafe extends Connector {
         if (!this.provider) throw new NoSafeContext()
 
         this.actions.update({
-          chainId: this.provider.chainId,
+          chainId: `eip155:${this.provider.chainId}`,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           accounts: [await this.sdk!.safe.getInfo().then(({ safeAddress }) => safeAddress)],
         })

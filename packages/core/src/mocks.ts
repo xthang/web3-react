@@ -1,4 +1,4 @@
-import type { ProviderRpcError, RequestArguments } from '@web3-react/types'
+import type { ProviderRpcError, RequestArguments } from '@web3-react-x/types'
 import { EventEmitter } from 'eventemitter3'
 
 export class MockEIP1193Provider<T = string> extends EventEmitter {

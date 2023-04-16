@@ -41,7 +41,7 @@ describe('#createWeb3ReactStoreAndActions', () => {
   describe('#update', () => {
     test('throws on bad chainIds', () => {
       const [, actions] = createWeb3ReactStoreAndActions()
-      for (const chainId of [1.1, 0, MAX_SAFE_CHAIN_ID + 1]) {
+      for (const chainId of ['eip155:1.1', 'eip155:0', `eip155:${MAX_SAFE_CHAIN_ID + 1}`]) {
         expect(() => actions.update({ chainId })).toThrow(`Invalid chainId ${chainId}`)
       }
     })
@@ -53,7 +53,7 @@ describe('#createWeb3ReactStoreAndActions', () => {
 
     test('chainId', () => {
       const [store, actions] = createWeb3ReactStoreAndActions()
-      const chainId = 1
+      const chainId = 'eip155:1'
       actions.update({ chainId })
       expect(store.getState()).toEqual({
         chainId,
@@ -103,7 +103,7 @@ describe('#createWeb3ReactStoreAndActions', () => {
 
     test('both', () => {
       const [store, actions] = createWeb3ReactStoreAndActions()
-      const chainId = 1
+      const chainId = 'eip155:1'
       const accounts: string[] = []
       actions.update({ chainId, accounts })
       expect(store.getState()).toEqual({
@@ -116,7 +116,7 @@ describe('#createWeb3ReactStoreAndActions', () => {
 
     test('chainId does not unset activating', () => {
       const [store, actions] = createWeb3ReactStoreAndActions()
-      const chainId = 1
+      const chainId = 'eip155:1'
       actions.startActivation()
       actions.update({ chainId })
       expect(store.getState()).toEqual({
@@ -142,7 +142,7 @@ describe('#createWeb3ReactStoreAndActions', () => {
 
     test('unsets activating', () => {
       const [store, actions] = createWeb3ReactStoreAndActions()
-      const chainId = 1
+      const chainId = 'eip155:1'
       const accounts: string[] = []
       actions.startActivation()
       actions.update({ chainId, accounts })

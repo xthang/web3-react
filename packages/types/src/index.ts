@@ -1,7 +1,7 @@
 import type { StoreApi } from 'zustand'
 
 export interface Web3ReactState {
-  chainId: number | undefined
+  chainId: string | undefined
   accounts: string[] | undefined
   activating: boolean
 }
@@ -10,11 +10,11 @@ export type Web3ReactStore = StoreApi<Web3ReactState>
 
 export type Web3ReactStateUpdate =
   | {
-      chainId: number
+      chainId: string
       accounts: string[]
     }
   | {
-      chainId: number
+      chainId: string
       accounts?: never
     }
   | {

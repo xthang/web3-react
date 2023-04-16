@@ -1,7 +1,7 @@
 import { Web3Provider } from '@ethersproject/providers'
 import { act, renderHook } from '@testing-library/react-hooks'
-import type { Actions } from '@web3-react/types'
-import { Connector } from '@web3-react/types'
+import type { Actions } from '@web3-react-x/types'
+import { Connector } from '@web3-react-x/types'
 import EventEmitter from 'events'
 import type { Web3ReactHooks, Web3ReactPriorityHooks, Web3ReactSelectedHooks } from './hooks'
 import { getPriorityConnector, getSelectedConnector, initializeConnector } from './hooks'
@@ -38,7 +38,7 @@ describe('#initializeConnector', () => {
     const { result } = renderHook(() => hooks.useChainId())
     expect(result.current).toBe(undefined)
 
-    act(() => connector.update({ chainId: 1 }))
+    act(() => connector.update({ chainId: 'eip155:1' }))
     expect(result.current).toBe(1)
   })
 
@@ -87,13 +87,13 @@ describe('#initializeConnector', () => {
     const { result } = renderHook(() => hooks.useIsActive())
     expect(result.current).toBe(false)
 
-    act(() => connector.update({ chainId: 1, accounts: [] }))
+    act(() => connector.update({ chainId: 'eip155:1', accounts: [] }))
     expect(result.current).toEqual(true)
   })
 
   describe('#useProvider', () => {
     test('lazy loads Web3Provider and rerenders', async () => {
-      act(() => connector.update({ chainId: 1, accounts: [] }))
+      act(() => connector.update({ chainId: 'eip155:1', accounts: [] }))
 
       const { result, waitForNextUpdate } = renderHook(() => hooks.useProvider())
       expect(result.current).toBeUndefined()
@@ -136,7 +136,7 @@ describe('#getSelectedConnector', () => {
   })
 
   test('connector active', () => {
-    act(() => connector.update({ chainId: 1, accounts: [] }))
+    act(() => connector.update({ chainId: 'eip155:1', accounts: [] }))
     const {
       result: { current: isActive },
     } = renderHook(() => selectedConnectorHooks.useSelectedIsActive(connector))
@@ -150,7 +150,7 @@ describe('#getSelectedConnector', () => {
   })
 
   test('connector2 active', () => {
-    act(() => connector2.update({ chainId: 1, accounts: [] }))
+    act(() => connector2.update({ chainId: 'eip155:1', accounts: [] }))
     const {
       result: { current: isActive },
     } = renderHook(() => selectedConnectorHooks.useSelectedIsActive(connector))
@@ -190,7 +190,7 @@ describe('#getPriorityConnector', () => {
   })
 
   test('returns first connector if it is initialized', () => {
-    act(() => connector.update({ chainId: 1, accounts: [] }))
+    act(() => connector.update({ chainId: 'eip155:1', accounts: [] }))
     const {
       result: { current: priorityConnector },
     } = renderHook(() => priorityConnectorHooks.usePriorityConnector())
@@ -205,7 +205,7 @@ describe('#getPriorityConnector', () => {
   })
 
   test('returns second connector if it is initialized', () => {
-    act(() => connector2.update({ chainId: 1, accounts: [] }))
+    act(() => connector2.update({ chainId: 'eip155:1', accounts: [] }))
     const {
       result: { current: priorityConnector },
     } = renderHook(() => priorityConnectorHooks.usePriorityConnector())

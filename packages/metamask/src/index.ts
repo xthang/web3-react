@@ -6,8 +6,8 @@ import type {
   ProviderConnectInfo,
   ProviderRpcError,
   WatchAssetParameters,
-} from '@web3-react/types'
-import { Connector } from '@web3-react/types'
+} from '@web3-react-x/types'
+import { Connector } from '@web3-react-x/types'
 
 type MetaMaskProvider = Provider & {
   isMetaMask?: boolean
@@ -65,7 +65,7 @@ export class MetaMask extends Connector {
         }
 
         this.provider.on('connect', ({ chainId }: ProviderConnectInfo): void => {
-          this.actions.update({ chainId: parseChainId(chainId) })
+          this.actions.update({ chainId: `eip155:${parseChainId(chainId)}` })
         })
 
         this.provider.on('disconnect', (error: ProviderRpcError): void => {
@@ -80,7 +80,7 @@ export class MetaMask extends Connector {
         })
 
         this.provider.on('chainChanged', (chainId: string): void => {
-          this.actions.update({ chainId: parseChainId(chainId) })
+          this.actions.update({ chainId: `eip155:${parseChainId(chainId)}` })
         })
 
         this.provider.on('accountsChanged', (accounts: string[]): void => {
@@ -108,7 +108,7 @@ export class MetaMask extends Connector {
       const accounts = (await this.provider.request({ method: 'eth_accounts' })) as string[]
       if (!accounts.length) throw new Error('No accounts returned')
       const chainId = (await this.provider.request({ method: 'eth_chainId' })) as string
-      this.actions.update({ chainId: parseChainId(chainId), accounts })
+      this.actions.update({ chainId: `eip155:${parseChainId(chainId)}`, accounts })
     } catch (error) {
       console.debug('Could not connect eagerly', error)
       // we should be able to use `cancelActivation` here, but on mobile, metamask emits a 'connect'
@@ -147,7 +147,7 @@ export class MetaMask extends Connector {
 
         // if there's no desired chain, or it's equal to the received, update
         if (!desiredChainId || receivedChainId === desiredChainId)
-          return this.actions.update({ chainId: receivedChainId, accounts })
+          return this.actions.update({ chainId: `eip155:${receivedChainId}`, accounts })
 
         const desiredChainIdHex = `0x${desiredChainId.toString(16)}`
 

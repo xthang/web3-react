@@ -1,5 +1,5 @@
-import { createWeb3ReactStoreAndActions } from '@web3-react/store'
-import type { Actions, Web3ReactStore } from '@web3-react/types'
+import { createWeb3ReactStoreAndActions } from '@web3-react-x/store'
+import type { Actions, Web3ReactStore } from '@web3-react-x/types'
 import { Network } from './'
 
 export class MockJsonRpcProvider {
