@@ -71,7 +71,7 @@ export class GnosisSafe extends Connector {
 
       if (safe) {
         const SafeAppProvider = await SafeAppProviderPromise
-        this.provider = new SafeAppProvider(safe, this.sdk)
+        this.provider = new SafeAppProvider(safe, this.sdk as any)
       }
     }))
   }
