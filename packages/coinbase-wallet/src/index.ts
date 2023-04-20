@@ -72,7 +72,7 @@ export class CoinbaseWallet extends Connector {
           // handle this edge case by disconnecting
           this.actions.resetState()
         } else {
-          this.actions.update({ accounts })
+          this.actions.update({ accounts: accounts.map((it) => `eip155:_:${it}`) })
         }
       })
     }))
@@ -92,7 +92,7 @@ export class CoinbaseWallet extends Connector {
       const accounts = await this.provider.request<string[]>({ method: 'eth_accounts' })
       if (!accounts.length) throw new Error('No accounts returned')
       const chainId = await this.provider.request<string>({ method: 'eth_chainId' })
-      this.actions.update({ chainId: `eip155:${chainId}`, accounts })
+      this.actions.update({ chainId: `eip155:${chainId}`, accounts: accounts.map((it) => `eip155:_:${it}`) })
     } catch (error) {
       cancelActivation()
       throw error
@@ -108,11 +108,13 @@ export class CoinbaseWallet extends Connector {
    * AddEthereumChainParameter, in which case the user will be prompted to add the chain with the specified parameters
    * first, before being prompted to switch.
    */
-  public async activate(desiredChainIdOrChainParameters?: number | AddEthereumChainParameter): Promise<void> {
-    const desiredChainId =
-      typeof desiredChainIdOrChainParameters === 'number'
-        ? desiredChainIdOrChainParameters
-        : desiredChainIdOrChainParameters?.chainId
+  public async activate({
+    desiredChain: desiredChainInfo,
+  }: {
+    desiredChain?: string | AddEthereumChainParameter
+  } = {}): Promise<void> {
+    const desiredChain = typeof desiredChainInfo === 'string' ? desiredChainInfo : desiredChainInfo?.chainId
+    const desiredChainId = desiredChain ? parseChainId(desiredChain.split(':')[1]) : undefined
 
     if (this.provider && this.connected) {
       if (!desiredChainId || desiredChainId === parseChainId(this.provider.chainId)) return
@@ -124,12 +126,12 @@ export class CoinbaseWallet extends Connector {
           params: [{ chainId: desiredChainIdHex }],
         })
         .catch(async (error: ProviderRpcError) => {
-          if (error.code === 4902 && typeof desiredChainIdOrChainParameters !== 'number') {
+          if (error.code === 4902 && typeof desiredChainInfo !== 'string') {
             if (!this.provider) throw new Error('No provider')
             // if we're here, we can try to add a new network
             return this.provider.request<void>({
               method: 'wallet_addEthereumChain',
-              params: [{ ...desiredChainIdOrChainParameters, chainId: desiredChainIdHex }],
+              params: [{ ...desiredChainInfo, chainId: desiredChainIdHex }],
             })
           }
 
@@ -150,7 +152,10 @@ export class CoinbaseWallet extends Connector {
       const receivedChainId = parseChainId(chainId)
 
       if (!desiredChainId || desiredChainId === receivedChainId)
-        return this.actions.update({ chainId: `eip155:${receivedChainId}`, accounts })
+        return this.actions.update({
+          chainId: `eip155:${receivedChainId}`,
+          accounts: accounts.map((it) => `eip155:_:${it}`),
+        })
 
       // if we're here, we can try to switch networks
       const desiredChainIdHex = `0x${desiredChainId.toString(16)}`
@@ -160,12 +165,12 @@ export class CoinbaseWallet extends Connector {
           params: [{ chainId: desiredChainIdHex }],
         })
         .catch(async (error: ProviderRpcError) => {
-          if (error.code === 4902 && typeof desiredChainIdOrChainParameters !== 'number') {
+          if (error.code === 4902 && typeof desiredChainInfo !== 'string') {
             if (!this.provider) throw new Error('No provider')
             // if we're here, we can try to add a new network
             return this.provider.request<void>({
               method: 'wallet_addEthereumChain',
-              params: [{ ...desiredChainIdOrChainParameters, chainId: desiredChainIdHex }],
+              params: [{ ...desiredChainInfo, chainId: desiredChainIdHex }],
             })
           }
 

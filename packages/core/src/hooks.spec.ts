@@ -39,7 +39,7 @@ describe('#initializeConnector', () => {
     expect(result.current).toBe(undefined)
 
     act(() => connector.update({ chainId: 'eip155:1' }))
-    expect(result.current).toBe(1)
+    expect(result.current).toBe('eip155:1')
   })
 
   describe('#useAccounts', () => {
@@ -55,7 +55,7 @@ describe('#initializeConnector', () => {
       const { result } = renderHook(() => hooks.useAccounts())
       expect(result.current).toBe(undefined)
 
-      act(() => connector.update({ accounts: ['0x0000000000000000000000000000000000000000'] }))
+      act(() => connector.update({ accounts: ['eip155:_:0x0000000000000000000000000000000000000000'] }))
       expect(result.current).toEqual(['0x0000000000000000000000000000000000000000'])
     })
 
@@ -65,7 +65,10 @@ describe('#initializeConnector', () => {
 
       act(() =>
         connector.update({
-          accounts: ['0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000001'],
+          accounts: [
+            'eip155:_:0x0000000000000000000000000000000000000000',
+            'eip155:_:0x0000000000000000000000000000000000000001',
+          ],
         })
       )
       expect(result.current).toEqual([

@@ -89,7 +89,7 @@ export class GnosisSafe extends Connector {
       this.actions.update({
         chainId: `eip155:${this.provider.chainId}`,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        accounts: [await this.sdk!.safe.getInfo().then(({ safeAddress }) => safeAddress)],
+        accounts: [await this.sdk!.safe.getInfo().then(({ safeAddress }) => safeAddress)].map((it) => `eip155:_:${it}`),
       })
     } catch (error) {
       cancelActivation()
@@ -111,7 +111,9 @@ export class GnosisSafe extends Connector {
         this.actions.update({
           chainId: `eip155:${this.provider.chainId}`,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          accounts: [await this.sdk!.safe.getInfo().then(({ safeAddress }) => safeAddress)],
+          accounts: [await this.sdk!.safe.getInfo().then(({ safeAddress }) => safeAddress)].map(
+            (it) => `eip155:_:${it}`
+          ),
         })
       })
       .catch((error) => {

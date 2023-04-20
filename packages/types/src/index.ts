@@ -1,8 +1,21 @@
 import type { StoreApi } from 'zustand'
 
+export enum NetworkStandard {
+  eip155 = 'eip155',
+  solana = 'solana',
+  polkadot = 'polkadot',
+  cosmos = 'cosmos',
+  cardano = 'cardano',
+  elrond = 'elrond',
+  multiversx = 'multiversx',
+  tron = 'tron',
+}
+
 export interface Web3ReactState {
+  allAccounts: string[] | undefined
   chainId: string | undefined
   accounts: string[] | undefined
+  accountName: string | undefined
   activating: boolean
 }
 
@@ -10,17 +23,22 @@ export type Web3ReactStore = StoreApi<Web3ReactState>
 
 export type Web3ReactStateUpdate =
   | {
-      chainId: string
-      accounts: string[]
-    }
-  | {
-      chainId: string
-      accounts?: never
-    }
-  | {
-      chainId?: never
-      accounts: string[]
-    }
+      // networkStandard: NetworkStandard
+      accountName?: string
+    } & (
+      | {
+          chainId: string
+          accounts: string[]
+        }
+      | {
+          chainId: string
+          accounts?: never
+        }
+      | {
+          chainId?: never
+          accounts: string[]
+        }
+    )
 
 export interface Actions {
   startActivation: () => () => void
@@ -55,7 +73,7 @@ export interface ProviderRpcError extends Error {
 
 /** Per {@link https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3085.md#parameters EIP-3085} */
 export interface AddEthereumChainParameter {
-  chainId: number
+  chainId: string
   chainName: string
   nativeCurrency: {
     name: string
@@ -120,17 +138,17 @@ export abstract class Connector {
   /**
    * Initiate a connection.
    */
-  public abstract activate(...args: unknown[]): Promise<void> | void
+  public abstract activate(args?: { desiredChain?: string | object }): Promise<void> | void
 
   /**
    * Attempt to initiate a connection, failing silently
    */
-  public connectEagerly?(...args: unknown[]): Promise<void> | void
+  public connectEagerly?(args?: { desiredChain?: string | object }): Promise<void> | void
 
   /**
    * Un-initiate a connection. Only needs to be defined if a connection requires specific logic on disconnect.
    */
-  public deactivate?(...args: unknown[]): Promise<void> | void
+  public deactivate?(args?: object): Promise<void> | void
 
   /**
    * Attempt to add an asset per EIP-747.

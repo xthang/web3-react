@@ -1,9 +1,12 @@
 import { getAddress } from '@ethersproject/address'
-import TronWebType from '@types-x/tronweb'
+import { default as TronWebType } from '@types-x/tronweb'
 import type { Actions, Web3ReactState, Web3ReactStateUpdate, Web3ReactStore } from '@web3-react-x/types'
+import { NetworkStandard } from '@web3-react-x/types'
 import { createStore } from 'zustand'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const TronWeb = require('tronweb') as typeof TronWebType
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+// const tronWebUtils = require('tronweb').utils as typeof utils
 
 /**
  * MAX_SAFE_CHAIN_ID is the upper bound limit on what will be accepted for `chainId`
@@ -12,17 +15,6 @@ const TronWeb = require('tronweb') as typeof TronWebType
  * @see {@link https://github.com/MetaMask/metamask-extension/blob/b6673731e2367e119a5fee9a454dd40bd4968948/shared/constants/network.js#L31}
  */
 export const MAX_SAFE_CHAIN_ID = 4503599627370476
-
-export enum NetworkStandard {
-  eip155 = 'eip155',
-  solana = 'solana',
-  polkadot = 'polkadot',
-  cosmos = 'cosmos',
-  cardano = 'cardano',
-  elrond = 'elrond',
-  multiversx = 'multiversx',
-  tron = 'tron',
-}
 
 function validateChainId(chainId: string): void {
   if (typeof chainId !== 'string') {
@@ -33,24 +25,28 @@ function validateChainId(chainId: string): void {
   const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
   if (!networkStandard) throw new Error(`Invalid network standard ${networkStandard}`)
   if (networkStandard === NetworkStandard.eip155) {
-    const parsed = parseInt(id)
-    if (!Number.isInteger(parsed) || parsed <= 0 || parsed > MAX_SAFE_CHAIN_ID) {
+    const parsed = parseFloat(id)
+    if (Number.isNaN(parsed) || !Number.isInteger(parsed) || parsed <= 0 || parsed > MAX_SAFE_CHAIN_ID) {
       throw new Error(`Invalid eip155 chainId ${chainId}`)
     }
-  }
+  } else if (networkStandard === NetworkStandard.tron) {
+    //
+  } else throw new Error(`Unsupported network standard ${networkStandard}`)
 }
 
-function validateAccount(networkStandard: NetworkStandard, account: string): string {
-  if (networkStandard === NetworkStandard.eip155) return getAddress(account)
+function validateAddress(networkStandard: NetworkStandard, address: string): string {
+  if (networkStandard === NetworkStandard.eip155) return getAddress(address)
   else if (networkStandard === NetworkStandard.tron) {
-    if (!TronWeb.isAddress(account)) return account
-  }
-  throw new Error(`Unsupported network standard ${networkStandard}`)
+    if (!TronWeb.isAddress(address)) throw new Error(`invalid Tron address: ${address}`)
+    return address
+  } else throw new Error(`Unsupported network standard ${networkStandard}`)
 }
 
 const DEFAULT_STATE = {
+  allAccounts: undefined,
   chainId: undefined,
   accounts: undefined,
+  accountName: undefined,
   activating: false,
 }
 
@@ -89,22 +85,28 @@ export function createWeb3ReactStoreAndActions(): [Web3ReactStore, Actions] {
       validateChainId(stateUpdate.chainId)
     }
 
-    // validate accounts statically, independent of existing state
-    if (stateUpdate.accounts !== undefined) {
-      const [namespace] = (stateUpdate.chainId ?? store.getState().chainId)!.split(':')
-      const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
-
-      for (let i = 0; i < stateUpdate.accounts.length; i++) {
-        stateUpdate.accounts[i] = validateAccount(networkStandard, stateUpdate.accounts[i])
-      }
-    }
-
     nullifier++
 
     store.setState((existingState): Web3ReactState => {
       // determine the next chainId and accounts
+      const allAccounts = stateUpdate.accounts ?? existingState.allAccounts
       const chainId = stateUpdate.chainId ?? existingState.chainId
-      const accounts = stateUpdate.accounts ?? existingState.accounts
+
+      // validate accounts statically, independent of existing state
+      const accountsInScope = stateUpdate.accounts
+        ?.map((account) => {
+          const [namespace, accountChainId, address] = account.split(':')
+          const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
+
+          if (accountChainId && accountChainId !== '_' && chainId && `${namespace}:${accountChainId}` !== chainId)
+            return undefined
+
+          return validateAddress(networkStandard, address)
+        })
+        .filter((it) => it) as string[] | undefined
+
+      const accounts = accountsInScope ?? existingState.accounts
+      const accountName = stateUpdate.accountName ?? existingState.accountName
 
       // ensure that the activating flag is cleared when appropriate
       let activating = existingState.activating
@@ -112,7 +114,7 @@ export function createWeb3ReactStoreAndActions(): [Web3ReactStore, Actions] {
         activating = false
       }
 
-      return { chainId, accounts, activating }
+      return { allAccounts, chainId, accounts, accountName, activating }
     })
   }
 

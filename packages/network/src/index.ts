@@ -19,8 +19,8 @@ function isUrl(url: url | JsonRpcProvider): url is url {
  */
 export interface NetworkConstructorArgs {
   actions: Actions
-  urlMap: { [chainId: number]: url | url[] | JsonRpcProvider | JsonRpcProvider[] }
-  defaultChainId?: number
+  urlMap: { [chainId: string]: url | url[] | JsonRpcProvider | JsonRpcProvider[] }
+  defaultChainId?: string
   timeout?: number
 }
 
@@ -30,28 +30,23 @@ export class Network extends Connector {
   /** {@inheritdoc Connector.customProvider} */
   public customProvider?: JsonRpcProvider
 
-  private readonly providerCache: Record<number, Promise<JsonRpcProvider> | undefined> = {}
+  private readonly providerCache: Record<string, Promise<JsonRpcProvider> | undefined> = {}
 
-  private readonly urlMap: Record<number, url[] | JsonRpcProvider[]>
-  private readonly defaultChainId: number
+  private readonly urlMap: Record<string, url[] | JsonRpcProvider[]>
+  private readonly defaultChainId: string
   private readonly timeout: number
 
-  constructor({
-    actions,
-    urlMap,
-    defaultChainId = Number(Object.keys(urlMap)[0]),
-    timeout = 5000,
-  }: NetworkConstructorArgs) {
+  constructor({ actions, urlMap, defaultChainId = Object.keys(urlMap)[0], timeout = 5000 }: NetworkConstructorArgs) {
     super(actions)
 
     this.urlMap = Object.keys(urlMap).reduce<typeof this.urlMap>((accumulator, chainId) => {
-      const urls = urlMap[Number(chainId)]
+      const urls = urlMap[chainId]
 
       if (Array.isArray(urls)) {
-        accumulator[Number(chainId)] = urls
+        accumulator[chainId] = urls
       } else {
         // this ternary just makes typescript happy, since it can't infer that the array has elements of the same type
-        accumulator[Number(chainId)] = isUrl(urls) ? [urls] : [urls]
+        accumulator[chainId] = isUrl(urls) ? [urls] : [urls]
       }
 
       return accumulator
@@ -60,7 +55,7 @@ export class Network extends Connector {
     this.timeout = timeout
   }
 
-  private async isomorphicInitialize(chainId: number): Promise<JsonRpcProvider> {
+  private async isomorphicInitialize(chainId: string): Promise<JsonRpcProvider> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (this.providerCache[chainId]) return this.providerCache[chainId]!
 
@@ -82,7 +77,11 @@ export class Network extends Connector {
    *
    * @param desiredChainId - The desired chain to connect to.
    */
-  public async activate(desiredChainId = this.defaultChainId): Promise<void> {
+  public async activate({
+    desiredChain: desiredChainId = this.defaultChainId,
+  }: {
+    desiredChain?: string
+  } = {}): Promise<void> {
     let cancelActivation: () => void
     if (!this.providerCache[desiredChainId]) {
       cancelActivation = this.actions.startActivation()
@@ -93,7 +92,7 @@ export class Network extends Connector {
         this.customProvider = customProvider
 
         const { chainId } = await this.customProvider.getNetwork()
-        this.actions.update({ chainId: chainId.toString(), accounts: [] })
+        this.actions.update({ chainId: chainId ? `eip155:${chainId.toString()}` : undefined, accounts: [] })
       })
       .catch((error: Error) => {
         cancelActivation?.()

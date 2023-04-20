@@ -72,6 +72,18 @@ export function getSelectedConnector(
     return store
   }
 
+  function useSelectedAllAccounts(connector: Connector) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const values = initializedConnectors.map(([, { useAllAccounts }]) => useAllAccounts())
+    return values[getIndex(connector)]
+  }
+
+  function useSelectedNetworkStandard(connector: Connector) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const values = initializedConnectors.map(([, { useNetworkStandard }]) => useNetworkStandard())
+    return values[getIndex(connector)]
+  }
+
   // the following code calls hooks in a map a lot, which violates the eslint rule.
   // this is ok, though, because initializedConnectors never changes, so the same hooks are called each time
   function useSelectedChainId(connector: Connector) {
@@ -95,6 +107,12 @@ export function getSelectedConnector(
   function useSelectedAccount(connector: Connector) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const values = initializedConnectors.map(([, { useAccount }]) => useAccount())
+    return values[getIndex(connector)]
+  }
+
+  function useSelectedAccountName(connector: Connector) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const values = initializedConnectors.map(([, { useAccountName }]) => useAccountName())
     return values[getIndex(connector)]
   }
 
@@ -137,10 +155,13 @@ export function getSelectedConnector(
 
   return {
     useSelectedStore,
+    useSelectedAllAccounts,
+    useSelectedNetworkStandard,
     useSelectedChainId,
     useSelectedAccounts,
     useSelectedIsActivating,
     useSelectedAccount,
+    useSelectedAccountName,
     useSelectedIsActive,
     useSelectedProvider,
     useSelectedENSNames,
@@ -160,10 +181,13 @@ export function getPriorityConnector(
 ) {
   const {
     useSelectedStore,
+    useSelectedAllAccounts,
+    useSelectedNetworkStandard,
     useSelectedChainId,
     useSelectedAccounts,
     useSelectedIsActivating,
     useSelectedAccount,
+    useSelectedAccountName,
     useSelectedIsActive,
     useSelectedProvider,
     useSelectedENSNames,
@@ -181,8 +205,16 @@ export function getPriorityConnector(
     return useSelectedStore(usePriorityConnector())
   }
 
+  function usePriorityAllAccounts() {
+    return useSelectedAllAccounts(usePriorityConnector())
+  }
+
   function usePriorityChainId() {
     return useSelectedChainId(usePriorityConnector())
+  }
+
+  function usePriorityNetworkStandard() {
+    return useSelectedNetworkStandard(usePriorityConnector())
   }
 
   function usePriorityAccounts() {
@@ -195,6 +227,10 @@ export function getPriorityConnector(
 
   function usePriorityAccount() {
     return useSelectedAccount(usePriorityConnector())
+  }
+
+  function usePriorityAccountName() {
+    return useSelectedAccountName(usePriorityConnector())
   }
 
   function usePriorityIsActive() {
@@ -220,20 +256,26 @@ export function getPriorityConnector(
 
   return {
     useSelectedStore,
+    useSelectedAllAccounts,
     useSelectedChainId,
+    useSelectedNetworkStandard,
     useSelectedAccounts,
     useSelectedIsActivating,
     useSelectedAccount,
+    useSelectedAccountName,
     useSelectedIsActive,
     useSelectedProvider,
     useSelectedENSNames,
     useSelectedENSName,
     usePriorityConnector,
     usePriorityStore,
+    usePriorityAllAccounts,
     usePriorityChainId,
+    usePriorityNetworkStandard,
     usePriorityAccounts,
     usePriorityIsActivating,
     usePriorityAccount,
+    usePriorityAccountName,
     usePriorityIsActive,
     usePriorityProvider,
     usePriorityENSNames,
@@ -241,8 +283,10 @@ export function getPriorityConnector(
   }
 }
 
+const ALL_ACCOUNTS = ({ allAccounts }: Web3ReactState) => allAccounts
 const CHAIN_ID = ({ chainId }: Web3ReactState) => chainId
 const ACCOUNTS = ({ accounts }: Web3ReactState) => accounts
+const ACCOUNT_NAME = ({ accountName }: Web3ReactState) => accountName
 const ACTIVATING = ({ activating }: Web3ReactState) => activating
 
 const ACCOUNTS_EQUALITY_CHECKER: <T extends Web3ReactState['accounts']>(a: T, b: T) => boolean = (
@@ -255,6 +299,10 @@ const ACCOUNTS_EQUALITY_CHECKER: <T extends Web3ReactState['accounts']>(a: T, b:
     oldAccounts.every((oldAccount, i) => oldAccount === newAccounts[i]))
 
 function getStateHooks(store: Web3ReactStore) {
+  function useAllAccounts(): Web3ReactState['allAccounts'] {
+    return useStore(store, ALL_ACCOUNTS, ACCOUNTS_EQUALITY_CHECKER)
+  }
+
   function useChainId(): Web3ReactState['chainId'] {
     return useStore(store, CHAIN_ID)
   }
@@ -263,31 +311,49 @@ function getStateHooks(store: Web3ReactStore) {
     return useStore(store, ACCOUNTS, ACCOUNTS_EQUALITY_CHECKER)
   }
 
+  function useAccountName(): Web3ReactState['accountName'] {
+    return useStore(store, ACCOUNT_NAME)
+  }
+
   function useIsActivating(): Web3ReactState['activating'] {
     return useStore(store, ACTIVATING)
   }
 
-  return { useChainId, useAccounts, useIsActivating }
+  return { useAllAccounts, useChainId, useAccounts, useAccountName, useIsActivating }
 }
 
-function getDerivedHooks({ useChainId, useAccounts, useIsActivating }: ReturnType<typeof getStateHooks>) {
+function getDerivedHooks({
+  useAllAccounts,
+  useChainId,
+  useAccounts,
+  useAccountName,
+  useIsActivating,
+}: ReturnType<typeof getStateHooks>) {
+  function useNetworkStandard(): string | undefined {
+    return useChainId()?.split(':')[0]
+  }
+
   function useAccount(): string | undefined {
     return useAccounts()?.[0]
   }
 
   function useIsActive(): boolean {
+    const allAccounts = useAllAccounts()
     const chainId = useChainId()
     const accounts = useAccounts()
+    const accountName = useAccountName()
     const activating = useIsActivating()
 
     return computeIsActive({
+      allAccounts,
       chainId,
       accounts,
+      accountName,
       activating,
     })
   }
 
-  return { useAccount, useIsActive }
+  return { useNetworkStandard, useAccount, useIsActive }
 }
 
 /**

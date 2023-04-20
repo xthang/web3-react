@@ -4,6 +4,8 @@ import { MetaMask } from '.'
 import { MockEIP1193Provider } from '@web3-react-x/core'
 
 const chainId = '0x1'
+const chain = `eip155:${Number.parseInt(chainId, 16)}`
+const allAccounts: string[] = ['eip155:_:0x0000000000000000000000000000000000000000']
 const accounts: string[] = ['0x0000000000000000000000000000000000000000']
 
 describe('MetaMask', () => {
@@ -35,11 +37,13 @@ describe('MetaMask', () => {
     expect(mockProvider.eth_requestAccounts).not.toHaveBeenCalled()
     expect(mockProvider.eth_accounts).toHaveBeenCalled()
     expect(mockProvider.eth_chainId).toHaveBeenCalled()
-    expect(mockProvider.eth_chainId.mock.invocationCallOrder[0])
-      .toBeGreaterThan(mockProvider.eth_accounts.mock.invocationCallOrder[0])
+    expect(mockProvider.eth_chainId.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockProvider.eth_accounts.mock.invocationCallOrder[0]
+    )
 
     expect(store.getState()).toEqual({
-      chainId: Number.parseInt(chainId, 16),
+      allAccounts,
+      chainId: chain,
       accounts,
       activating: false,
     })
@@ -54,11 +58,13 @@ describe('MetaMask', () => {
     expect(mockProvider.eth_requestAccounts).toHaveBeenCalled()
     expect(mockProvider.eth_accounts).not.toHaveBeenCalled()
     expect(mockProvider.eth_chainId).toHaveBeenCalled()
-    expect(mockProvider.eth_chainId.mock.invocationCallOrder[0])
-      .toBeGreaterThan(mockProvider.eth_requestAccounts.mock.invocationCallOrder[0])
+    expect(mockProvider.eth_chainId.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockProvider.eth_requestAccounts.mock.invocationCallOrder[0]
+    )
 
     expect(store.getState()).toEqual({
-      chainId: Number.parseInt(chainId, 16),
+      allAccounts,
+      chainId: chain,
       accounts,
       activating: false,
     })

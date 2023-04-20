@@ -14,8 +14,11 @@ import { getPriorityConnector } from './hooks'
  */
 export type Web3ContextType<T extends BaseProvider = Web3Provider> = {
   connector: Connector
+  allAccounts: ReturnType<Web3ReactPriorityHooks['useSelectedAllAccounts']>
+  networkStandard: ReturnType<Web3ReactPriorityHooks['useSelectedNetworkStandard']>
   chainId: ReturnType<Web3ReactPriorityHooks['useSelectedChainId']>
   accounts: ReturnType<Web3ReactPriorityHooks['useSelectedAccounts']>
+  accountName: ReturnType<Web3ReactPriorityHooks['useSelectedAccountName']>
   isActivating: ReturnType<Web3ReactPriorityHooks['useSelectedIsActivating']>
   account: ReturnType<Web3ReactPriorityHooks['useSelectedAccount']>
   isActive: ReturnType<Web3ReactPriorityHooks['useSelectedIsActive']>
@@ -69,10 +72,13 @@ export function Web3ReactProvider({
   const hooks = getPriorityConnector(...connectors)
   const {
     usePriorityConnector,
+    useSelectedNetworkStandard,
     useSelectedChainId,
+    useSelectedAllAccounts,
     useSelectedAccounts,
     useSelectedIsActivating,
     useSelectedAccount,
+    useSelectedAccountName,
     useSelectedIsActive,
     useSelectedProvider,
     useSelectedENSNames,
@@ -82,12 +88,15 @@ export function Web3ReactProvider({
   const priorityConnector = usePriorityConnector()
   const connector = connectorOverride ?? priorityConnector
 
+  const allAccounts = useSelectedAllAccounts(connector)
+  const networkStandard = useSelectedNetworkStandard(connector)
   const chainId = useSelectedChainId(connector)
   const accounts = useSelectedAccounts(connector)
   const isActivating = useSelectedIsActivating(connector)
   const account = useSelectedAccount(connector)
+  const accountName = useSelectedAccountName(connector)
   const isActive = useSelectedIsActive(connector)
-  // note that we've omitted a <T extends BaseProvider = Web3Provider> generic type
+  // note that we've omitted a <T extends Provider = Web3Provider> generic type
   // in Web3ReactProvider, and thus can't pass T through to useSelectedProvider below.
   // this is because if we did so, the type of provider would include T, but that would
   // conflict because Web3Context can't take a generic. however, this isn't particularly
@@ -100,10 +109,13 @@ export function Web3ReactProvider({
     <Web3Context.Provider
       value={{
         connector,
+        allAccounts,
+        networkStandard,
         chainId,
         accounts,
         isActivating,
         account,
+        accountName,
         isActive,
         provider,
         ENSNames,

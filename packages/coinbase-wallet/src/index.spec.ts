@@ -1,7 +1,7 @@
-import { createWeb3ReactStoreAndActions } from '@web3-react/store'
-import type { Actions, Web3ReactStore } from '@web3-react/types'
+import { createWeb3ReactStoreAndActions } from '@web3-react-x/store'
+import type { Actions, Web3ReactStore } from '@web3-react-x/types'
 import { CoinbaseWallet } from '.'
-import { MockEIP1193Provider } from '@web3-react/core'
+import { MockEIP1193Provider } from '@web3-react-x/core'
 
 jest.mock(
   '@coinbase/wallet-sdk',
@@ -14,6 +14,7 @@ jest.mock(
 )
 
 const chainId = '0x1'
+const allAccounts: string[] = []
 const accounts: string[] = []
 
 describe('Coinbase Wallet', () => {
@@ -49,7 +50,8 @@ describe('Coinbase Wallet', () => {
         .toBeGreaterThan(mockProvider.eth_requestAccounts.mock.invocationCallOrder[0])
 
       expect(store.getState()).toEqual({
-        chainId: Number.parseInt(chainId, 16),
+        allAccounts,
+        chainId: `eip155:${Number.parseInt(chainId, 16)}`,
         accounts,
         activating: false,
       })

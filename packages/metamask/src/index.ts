@@ -88,7 +88,7 @@ export class MetaMask extends Connector {
             // handle this edge case by disconnecting
             this.actions.resetState()
           } else {
-            this.actions.update({ accounts })
+            this.actions.update({ accounts: accounts.map((it) => `eip155:_:${it}`) })
           }
         })
       }
@@ -108,7 +108,10 @@ export class MetaMask extends Connector {
       const accounts = (await this.provider.request({ method: 'eth_accounts' })) as string[]
       if (!accounts.length) throw new Error('No accounts returned')
       const chainId = (await this.provider.request({ method: 'eth_chainId' })) as string
-      this.actions.update({ chainId: `eip155:${parseChainId(chainId)}`, accounts })
+      this.actions.update({
+        chainId: `eip155:${parseChainId(chainId)}`,
+        accounts: accounts.map((it) => `eip155:_:${it}`),
+      })
     } catch (error) {
       console.debug('Could not connect eagerly', error)
       // we should be able to use `cancelActivation` here, but on mobile, metamask emits a 'connect'
@@ -127,7 +130,11 @@ export class MetaMask extends Connector {
    * argument is of type AddEthereumChainParameter, in which case the user will be prompted to add the chain with the
    * specified parameters first, before being prompted to switch.
    */
-  public async activate(desiredChainIdOrChainParameters?: number | AddEthereumChainParameter): Promise<void> {
+  public async activate({
+    desiredChain: desiredChainInfo,
+  }: {
+    desiredChain?: string | AddEthereumChainParameter
+  } = {}): Promise<void> {
     let cancelActivation: () => void
     if (!this.provider?.isConnected?.()) cancelActivation = this.actions.startActivation()
 
@@ -140,14 +147,13 @@ export class MetaMask extends Connector {
         const accounts = (await this.provider.request({ method: 'eth_requestAccounts' })) as string[]
         const chainId = (await this.provider.request({ method: 'eth_chainId' })) as string
         const receivedChainId = parseChainId(chainId)
-        const desiredChainId =
-          typeof desiredChainIdOrChainParameters === 'number'
-            ? desiredChainIdOrChainParameters
-            : desiredChainIdOrChainParameters?.chainId
+        const receivedChain = `eip155:${receivedChainId}`
+        const desiredChain = typeof desiredChainInfo === 'string' ? desiredChainInfo : desiredChainInfo?.chainId
+        const desiredChainId = desiredChain ? parseChainId(desiredChain.split(':')[1]) : undefined
 
         // if there's no desired chain, or it's equal to the received, update
         if (!desiredChainId || receivedChainId === desiredChainId)
-          return this.actions.update({ chainId: `eip155:${receivedChainId}`, accounts })
+          return this.actions.update({ chainId: receivedChain, accounts: accounts.map((it) => `eip155:_:${it}`) })
 
         const desiredChainIdHex = `0x${desiredChainId.toString(16)}`
 
@@ -158,18 +164,18 @@ export class MetaMask extends Connector {
             params: [{ chainId: desiredChainIdHex }],
           })
           .catch((error: ProviderRpcError) => {
-            if (error.code === 4902 && typeof desiredChainIdOrChainParameters !== 'number') {
+            if (error.code === 4902 && typeof desiredChainInfo !== 'string') {
               if (!this.provider) throw new Error('No provider')
               // if we're here, we can try to add a new network
               return this.provider.request({
                 method: 'wallet_addEthereumChain',
-                params: [{ ...desiredChainIdOrChainParameters, chainId: desiredChainIdHex }],
+                params: [{ ...desiredChainInfo, chainId: desiredChainIdHex }],
               })
             }
 
             throw error
           })
-          .then(() => this.activate(desiredChainId))
+          .then(() => this.activate({ desiredChain: desiredChainInfo }))
       })
       .catch((error) => {
         cancelActivation?.()

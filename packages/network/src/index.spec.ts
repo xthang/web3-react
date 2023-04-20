@@ -10,12 +10,15 @@ export class MockJsonRpcProvider {
   }
 }
 
-jest.mock('@ethersproject/providers', () => ({
+jest.doMock('@ethersproject/providers', () => ({
   JsonRpcProvider: MockJsonRpcProvider,
   FallbackProvider: class MockFallbackProvider extends MockJsonRpcProvider {},
 }))
 
 const chainId = '0x1'
+const allAccounts: string[] = []
+const chain = 'eip155:1'
+const chain2 = 'eip155:2'
 const accounts: string[] = []
 
 describe('Network', () => {
@@ -27,7 +30,7 @@ describe('Network', () => {
     beforeEach(() => {
       let actions: Actions
       ;[store, actions] = createWeb3ReactStoreAndActions()
-      connector = new Network({ actions, urlMap: { 1: 'https://mock.url' } })
+      connector = new Network({ actions, urlMap: { [chain]: 'https://mock.url' } })
     })
 
     test('is un-initialized', async () => {
@@ -51,7 +54,8 @@ describe('Network', () => {
         await connector.activate()
 
         expect(store.getState()).toEqual({
-          chainId: Number.parseInt(chainId, 16),
+          allAccounts,
+          chainId: chain,
           accounts,
           activating: false,
           error: undefined,
@@ -66,7 +70,7 @@ describe('Network', () => {
       ;[store, actions] = createWeb3ReactStoreAndActions()
       connector = new Network({
         actions,
-        urlMap: { 1: ['https://1.mock.url', 'https://2.mock.url'] },
+        urlMap: { [chain]: ['https://1.mock.url', 'https://2.mock.url'] },
       })
     })
 
@@ -81,7 +85,8 @@ describe('Network', () => {
       await connector.activate()
 
       expect(store.getState()).toEqual({
-        chainId: Number.parseInt(chainId, 16),
+        allAccounts,
+        chainId: chain,
         accounts,
         activating: false,
         error: undefined,
@@ -95,7 +100,7 @@ describe('Network', () => {
       ;[store, actions] = createWeb3ReactStoreAndActions()
       connector = new Network({
         actions,
-        urlMap: { 1: 'https://mainnet.mock.url', 2: 'https://testnet.mock.url' },
+        urlMap: { [chain]: 'https://mainnet.mock.url', [chain2]: 'https://testnet.mock.url' },
       })
     })
 
@@ -108,7 +113,8 @@ describe('Network', () => {
         await connector.activate()
 
         expect(store.getState()).toEqual({
-          chainId: 1,
+          allAccounts,
+          chainId: chain,
           accounts,
           activating: false,
           error: undefined,
@@ -117,13 +123,14 @@ describe('Network', () => {
 
       test('chainId = 2', async () => {
         // testing hack to ensure the provider is set
-        await connector.activate(2)
+        await connector.activate({ desiredChain: 'eip155:2' })
         mockConnector = connector.customProvider as unknown as MockJsonRpcProvider
         mockConnector.chainId = '0x2'
-        await connector.activate(2)
+        await connector.activate({ desiredChain: 'eip155:2' })
 
         expect(store.getState()).toEqual({
-          chainId: 2,
+          allAccounts,
+          chainId: 'eip155:2',
           accounts,
           activating: false,
           error: undefined,
