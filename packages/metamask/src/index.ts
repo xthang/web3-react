@@ -149,7 +149,7 @@ export class MetaMask extends Connector {
         const receivedChainId = parseChainId(chainId)
         const receivedChain = `eip155:${receivedChainId}`
         const desiredChain = typeof desiredChainInfo === 'string' ? desiredChainInfo : desiredChainInfo?.chainId
-        const desiredChainId = desiredChain ? parseChainId(desiredChain.split(':')[1]) : undefined
+        const desiredChainId = desiredChain ? parseInt(desiredChain.split(':')[1]) : undefined
 
         // if there's no desired chain, or it's equal to the received, update
         if (!desiredChainId || receivedChainId === desiredChainId)
