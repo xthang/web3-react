@@ -10,7 +10,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "8.1.2-beta.4",
+  "version": "8.1.2-beta.5",
   "files": [
     "dist/*"
   ],
@@ -24,12 +24,12 @@
     "start": "tsc --watch"
   },
   "dependencies": {
-    "@web3-react-x/types": "^8.1.2-beta.4"
+    "@web3-react-x/types": "^8.1.2-beta.5"
   },
   "peerDependencies": {
     "@coinbase/wallet-sdk": "^3.0.4"
   },
   "devDependencies": {
-    "@web3-react-x/store": "^8.1.2-beta.4"
+    "@web3-react-x/store": "^8.1.2-beta.5"
   }
 }
