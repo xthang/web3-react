@@ -1,7 +1,7 @@
 import { getAddress } from '@ethersproject/address'
 import { default as TronWebType } from '@types-x/tronweb'
 import type { Actions, Web3ReactState, Web3ReactStateUpdate, Web3ReactStore } from '@web3-react-x/types'
-import { NetworkStandard } from '@web3-react-x/types'
+import { ChainNamespace } from '@web3-react-x/types'
 import { createStore } from 'zustand'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const TronWeb = require('tronweb') as typeof TronWebType
@@ -22,24 +22,24 @@ function validateChainId(chainId: string): void {
   }
   const [namespace, id] = chainId.split(':')
   if (!namespace || !id) throw new Error(`Invalid chainId ${chainId}`)
-  const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
-  if (!networkStandard) throw new Error(`Invalid network standard ${networkStandard}`)
-  if (networkStandard === NetworkStandard.eip155) {
+  const chainNamespace = ChainNamespace[namespace as keyof typeof ChainNamespace]
+  if (!chainNamespace) throw new Error(`Invalid network standard ${chainNamespace}`)
+  if (chainNamespace === ChainNamespace.eip155) {
     const parsed = parseFloat(id)
     if (Number.isNaN(parsed) || !Number.isInteger(parsed) || parsed <= 0 || parsed > MAX_SAFE_CHAIN_ID) {
       throw new Error(`Invalid eip155 chainId ${chainId}`)
     }
-  } else if (networkStandard === NetworkStandard.tron) {
+  } else if (chainNamespace === ChainNamespace.tron) {
     //
-  } else throw new Error(`Unsupported network standard ${networkStandard}`)
+  } else throw new Error(`Unsupported network standard ${chainNamespace}`)
 }
 
-function validateAddress(networkStandard: NetworkStandard, address: string): string {
-  if (networkStandard === NetworkStandard.eip155) return getAddress(address)
-  else if (networkStandard === NetworkStandard.tron) {
+function validateAddress(chainNamespace: ChainNamespace, address: string): string {
+  if (chainNamespace === ChainNamespace.eip155) return getAddress(address)
+  else if (chainNamespace === ChainNamespace.tron) {
     if (!TronWeb.isAddress(address)) throw new Error(`invalid Tron address: ${address}`)
     return address
-  } else throw new Error(`Unsupported network standard ${networkStandard}`)
+  } else throw new Error(`Unsupported network standard ${chainNamespace}`)
 }
 
 const DEFAULT_STATE = {
@@ -96,12 +96,12 @@ export function createWeb3ReactStoreAndActions(): [Web3ReactStore, Actions] {
       const accountsInScope = stateUpdate.accounts
         ?.map((account) => {
           const [namespace, accountChainId, address] = account.split(':')
-          const networkStandard = NetworkStandard[namespace as keyof typeof NetworkStandard]
+          const chainNamespace = ChainNamespace[namespace as keyof typeof ChainNamespace]
 
           if (accountChainId && accountChainId !== '_' && chainId && `${namespace}:${accountChainId}` !== chainId)
             return undefined
 
-          return validateAddress(networkStandard, address)
+          return validateAddress(chainNamespace, address)
         })
         .filter((it) => it) as string[] | undefined
 

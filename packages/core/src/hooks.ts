@@ -78,9 +78,9 @@ export function getSelectedConnector(
     return values[getIndex(connector)]
   }
 
-  function useSelectedNetworkStandard(connector: Connector) {
+  function useSelectedChainNamespace(connector: Connector) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const values = initializedConnectors.map(([, { useNetworkStandard }]) => useNetworkStandard())
+    const values = initializedConnectors.map(([, { useChainNamespace }]) => useChainNamespace())
     return values[getIndex(connector)]
   }
 
@@ -156,7 +156,7 @@ export function getSelectedConnector(
   return {
     useSelectedStore,
     useSelectedAllAccounts,
-    useSelectedNetworkStandard,
+    useSelectedChainNamespace,
     useSelectedChainId,
     useSelectedAccounts,
     useSelectedIsActivating,
@@ -182,7 +182,7 @@ export function getPriorityConnector(
   const {
     useSelectedStore,
     useSelectedAllAccounts,
-    useSelectedNetworkStandard,
+    useSelectedChainNamespace,
     useSelectedChainId,
     useSelectedAccounts,
     useSelectedIsActivating,
@@ -213,8 +213,8 @@ export function getPriorityConnector(
     return useSelectedChainId(usePriorityConnector())
   }
 
-  function usePriorityNetworkStandard() {
-    return useSelectedNetworkStandard(usePriorityConnector())
+  function usePriorityChainNamespace() {
+    return useSelectedChainNamespace(usePriorityConnector())
   }
 
   function usePriorityAccounts() {
@@ -258,7 +258,7 @@ export function getPriorityConnector(
     useSelectedStore,
     useSelectedAllAccounts,
     useSelectedChainId,
-    useSelectedNetworkStandard,
+    useSelectedChainNamespace,
     useSelectedAccounts,
     useSelectedIsActivating,
     useSelectedAccount,
@@ -271,7 +271,7 @@ export function getPriorityConnector(
     usePriorityStore,
     usePriorityAllAccounts,
     usePriorityChainId,
-    usePriorityNetworkStandard,
+    usePriorityChainNamespace,
     usePriorityAccounts,
     usePriorityIsActivating,
     usePriorityAccount,
@@ -329,8 +329,9 @@ function getDerivedHooks({
   useAccountName,
   useIsActivating,
 }: ReturnType<typeof getStateHooks>) {
-  function useNetworkStandard(): string | undefined {
-    return useChainId()?.split(':')[0]
+  function useChainNamespace(): string | undefined {
+    const chainId = useChainId()
+    return useMemo(() => chainId?.split(':')[0], [chainId])
   }
 
   function useAccount(): string | undefined {
@@ -353,7 +354,7 @@ function getDerivedHooks({
     })
   }
 
-  return { useNetworkStandard, useAccount, useIsActive }
+  return { useChainNamespace, useAccount, useIsActive }
 }
 
 /**

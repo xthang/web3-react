@@ -1,7 +1,8 @@
 import type detectEthereumProvider from '@metamask/detect-provider'
-import type {
+import {
   Actions,
   AddEthereumChainParameter,
+  ChainNamespace,
   Provider,
   ProviderConnectInfo,
   ProviderRpcError,
@@ -65,7 +66,10 @@ export class MetaMask extends Connector {
         }
 
         this.provider.on('connect', ({ chainId }: ProviderConnectInfo): void => {
-          this.actions.update({ chainId: `eip155:${parseChainId(chainId)}` })
+          const receivedChainId = parseChainId(chainId)
+          // Temporarily check. TODO: fix this to support caip-2 completely
+          const chainNamespace = isTron(receivedChainId) ? ChainNamespace.tron : ChainNamespace.eip155
+          this.actions.update({ chainId: `${chainNamespace}:${receivedChainId}` })
         })
 
         this.provider.on('disconnect', (error: ProviderRpcError): void => {
@@ -80,7 +84,10 @@ export class MetaMask extends Connector {
         })
 
         this.provider.on('chainChanged', (chainId: string): void => {
-          this.actions.update({ chainId: `eip155:${parseChainId(chainId)}` })
+          const receivedChainId = parseChainId(chainId)
+          // Temporarily check. TODO: fix this to support caip-2 completely
+          const chainNamespace = isTron(receivedChainId) ? ChainNamespace.tron : ChainNamespace.eip155
+          this.actions.update({ chainId: `${chainNamespace}:${receivedChainId}` })
         })
 
         this.provider.on('accountsChanged', (accounts: string[]): void => {
@@ -88,7 +95,10 @@ export class MetaMask extends Connector {
             // handle this edge case by disconnecting
             this.actions.resetState()
           } else {
-            this.actions.update({ accounts: accounts.map((it) => `eip155:_:${it}`) })
+            const chainId = parseChainId(this.provider!.chainId)
+            // Temporarily check. TODO: fix this to support caip-2 completely
+            const chainNamespace = isTron(chainId) ? ChainNamespace.tron : ChainNamespace.eip155
+            this.actions.update({ accounts: accounts.map((it) => `${chainNamespace}:_:${it}`) })
           }
         })
       }
@@ -108,9 +118,12 @@ export class MetaMask extends Connector {
       const accounts = (await this.provider.request({ method: 'eth_accounts' })) as string[]
       if (!accounts.length) throw new Error('No accounts returned')
       const chainId = (await this.provider.request({ method: 'eth_chainId' })) as string
+      const receivedChainId = parseChainId(chainId)
+      // Temporarily check. TODO: fix this to support caip-2 completely
+      const chainNamespace = isTron(receivedChainId) ? ChainNamespace.tron : ChainNamespace.eip155
       this.actions.update({
-        chainId: `eip155:${parseChainId(chainId)}`,
-        accounts: accounts.map((it) => `eip155:_:${it}`),
+        chainId: `${chainNamespace}:${receivedChainId}`,
+        accounts: accounts.map((it) => `${chainNamespace}:_:${it}`),
       })
     } catch (error) {
       console.debug('Could not connect eagerly', error)
@@ -147,13 +160,18 @@ export class MetaMask extends Connector {
         const accounts = (await this.provider.request({ method: 'eth_requestAccounts' })) as string[]
         const chainId = (await this.provider.request({ method: 'eth_chainId' })) as string
         const receivedChainId = parseChainId(chainId)
-        const receivedChain = `eip155:${receivedChainId}`
+        // Temporarily check. TODO: fix this to support caip-2 completely
+        const chainNamespace = isTron(receivedChainId) ? ChainNamespace.tron : ChainNamespace.eip155
+        const receivedChain = `${chainNamespace}:${receivedChainId}`
         const desiredChain = typeof desiredChainInfo === 'string' ? desiredChainInfo : desiredChainInfo?.chainId
         const desiredChainId = desiredChain ? parseInt(desiredChain.split(':')[1]) : undefined
 
         // if there's no desired chain, or it's equal to the received, update
         if (!desiredChainId || receivedChainId === desiredChainId)
-          return this.actions.update({ chainId: receivedChain, accounts: accounts.map((it) => `eip155:_:${it}`) })
+          return this.actions.update({
+            chainId: receivedChain,
+            accounts: accounts.map((it) => `${chainNamespace}:_:${it}`),
+          })
 
         const desiredChainIdHex = `0x${desiredChainId.toString(16)}`
 
@@ -204,4 +222,8 @@ export class MetaMask extends Connector {
         return true
       })
   }
+}
+
+function isTron(chainId: number) {
+  return [728126428, 2494104990, 3448148188].includes(chainId)
 }

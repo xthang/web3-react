@@ -15,7 +15,7 @@ import { getPriorityConnector } from './hooks'
 export type Web3ContextType<T extends BaseProvider = Web3Provider> = {
   connector: Connector
   allAccounts: ReturnType<Web3ReactPriorityHooks['useSelectedAllAccounts']>
-  networkStandard: ReturnType<Web3ReactPriorityHooks['useSelectedNetworkStandard']>
+  chainNamespace: ReturnType<Web3ReactPriorityHooks['useSelectedChainNamespace']>
   chainId: ReturnType<Web3ReactPriorityHooks['useSelectedChainId']>
   accounts: ReturnType<Web3ReactPriorityHooks['useSelectedAccounts']>
   accountName: ReturnType<Web3ReactPriorityHooks['useSelectedAccountName']>
@@ -72,7 +72,7 @@ export function Web3ReactProvider({
   const hooks = getPriorityConnector(...connectors)
   const {
     usePriorityConnector,
-    useSelectedNetworkStandard,
+    useSelectedChainNamespace,
     useSelectedChainId,
     useSelectedAllAccounts,
     useSelectedAccounts,
@@ -89,7 +89,7 @@ export function Web3ReactProvider({
   const connector = connectorOverride ?? priorityConnector
 
   const allAccounts = useSelectedAllAccounts(connector)
-  const networkStandard = useSelectedNetworkStandard(connector)
+  const chainNamespace = useSelectedChainNamespace(connector)
   const chainId = useSelectedChainId(connector)
   const accounts = useSelectedAccounts(connector)
   const isActivating = useSelectedIsActivating(connector)
@@ -110,7 +110,7 @@ export function Web3ReactProvider({
       value={{
         connector,
         allAccounts,
-        networkStandard,
+        chainNamespace,
         chainId,
         accounts,
         isActivating,

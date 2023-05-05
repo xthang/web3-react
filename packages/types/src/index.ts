@@ -1,6 +1,6 @@
 import type { StoreApi } from 'zustand'
 
-export enum NetworkStandard {
+export enum ChainNamespace {
   eip155 = 'eip155',
   solana = 'solana',
   polkadot = 'polkadot',
@@ -23,7 +23,7 @@ export type Web3ReactStore = StoreApi<Web3ReactState>
 
 export type Web3ReactStateUpdate =
   | {
-      // networkStandard: NetworkStandard
+      // chainNamespace: ChainNamespace
       accountName?: string
     } & (
       | {
