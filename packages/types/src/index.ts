@@ -11,6 +11,8 @@ export enum ChainNamespace {
   tron = 'tron',
 }
 
+export type ChainName = `${string}:${string}`
+
 export interface Web3ReactState {
   allAccounts: string[] | undefined
   chainId: string | undefined

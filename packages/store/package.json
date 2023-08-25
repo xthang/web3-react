@@ -9,7 +9,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "8.1.2-beta.6",
+  "version": "8.1.2-beta.7",
   "files": [
     "dist/*"
   ],
@@ -24,7 +24,10 @@
   },
   "dependencies": {
     "@ethersproject/address": "^5",
-    "@web3-react-x/types": "^8.1.2-beta.6",
+    "@web3-react-x/types": "^8.1.2-beta.7",
     "zustand": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types-x/tronweb": "^5.1.0-beta.6"
   }
 }
